@@ -94,6 +94,29 @@ function AuthBar({ session }) {
   )
 }
 
+function WatchForm({ id }) {
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState('')
+  const [state, setState] = useState('idle')
+  const [err, setErr] = useState('')
+  if (state === 'done') return <p className="watchok">Açılınca {email} adresine haber vereceğiz.</p>
+  if (!open) return <button className="watchbtn" onClick={() => setOpen(true)}>🔔 Açılınca haber ver</button>
+  async function send(e) {
+    e.preventDefault()
+    setState('sending'); setErr('')
+    const { error } = await supabase.rpc('kapsul_watch', { p_id: id, p_email: email })
+    if (error) { setErr(error.message); setState('idle') } else setState('done')
+  }
+  return (
+    <form className="watchform" onSubmit={send}>
+      <input type="email" required autoFocus value={email} placeholder="e-posta adresin"
+        aria-label="Bildirim için e-posta adresi" onChange={(e) => setEmail(e.target.value)} />
+      <button disabled={state === 'sending'}>{state === 'sending' ? '…' : 'Kaydet'}</button>
+      {err && <span className="watcherr">{err}</span>}
+    </form>
+  )
+}
+
 function Capsule({ c, now, onShare, mine }) {
   const left = new Date(c.unlock_at).getTime() - now
   const total = new Date(c.unlock_at) - new Date(c.created_at)
@@ -113,6 +136,7 @@ function Capsule({ c, now, onShare, mine }) {
         <span>{c.is_open ? <>Açıldı · {fmt(c.unlock_at)}</> : <>Açılmasına <b>{countdown(left)}</b></>}</span>
         <button className="share" onClick={() => onShare(c.id)} aria-label="Paylaş">↗ Paylaş</button>
       </div>
+      {!c.is_open && <WatchForm id={c.id} />}
     </article>
   )
 }

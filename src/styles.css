@@ -67,3 +67,9 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: cen
 .ghost:disabled { opacity: .6; }
 .who { color: var(--muted); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .err.small { font-size: 13px; }
+.watchbtn { justify-self: start; background: transparent; border: 1px dashed rgba(233,225,212,.35); border-radius: 99px; padding: 3px 10px; font-size: 12px; }
+.watchform { display: flex; gap: 6px; flex-wrap: wrap; }
+.watchform input { flex: 1; min-width: 0; padding: 6px 10px; font-size: 13px; background: rgba(255,255,255,.06); border-color: rgba(233,225,212,.25); }
+.watchform button { background: #e9e1d4; color: #1f1a14; border: 0; border-radius: 10px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.watcherr { flex-basis: 100%; color: #fca5a5; font-size: 12px; }
+.watchok { margin: 0; font-size: 12px; opacity: .8; }

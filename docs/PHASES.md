@@ -5,7 +5,7 @@
 | 1 | MVP: kapsül oluştur, duvar, geri sayım, otomatik açılma | ✅ Tamam (v1.0) |
 | 2 | Paylaşım linki `/k/:id`, IP başına spam sınırı, "Benimkiler" (cihaz bazlı) | ✅ Tamam (v1.1) |
 | 3 | Supabase Auth (e-posta magic link), kapsülün hesaba bağlanması | ✅ Tamam (v1.2) — deploy bekliyor |
-| 4 | Açılınca e-posta bildirimi (Edge Function + pg_cron + Resend) | ⏳ `/faz-4-bildirim` |
+| 4 | Açılınca e-posta bildirimi (Edge Function + pg_cron + Resend) | ✅ Tamam (v1.3) — `RESEND_API_KEY` bekliyor |
 | 5 | Cilalama: dinamik OG görseli, PWA, erişilebilirlik, boş/yükleme durumları | ⏳ `/faz-5-cilalama` |
 | 6 | Kalite: Vitest + Playwright testleri, GitHub Actions CI, Vercel Git bağlantısı | ⏳ `/faz-6-kalite` |
 
@@ -36,7 +36,15 @@ Migration: `supabase/migrations/20261105000003_kapsul_auth.sql`
 - Arayüz: üstte "Giriş yap" → e-posta → magic link; çıkış
 - **Manuel adım:** Supabase → Authentication → URL Configuration'a `https://zaman-kapsulu-three.vercel.app` ve `http://localhost:5173` ekle
 
-## Faz 4 — Bildirim
+## Faz 4 — Bildirim ✅
+Yapılanlar: `notified_at` kolonu (eski açık kapsüller işaretli, geriye dönük e-posta yok), `kapsul_watchers` tablosu,
+`kapsul_watch(id, email)` RPC (biçim kontrolü, mühürlü kapsül, en fazla 50 takipçi), yalnız `service_role` için
+`kapsul_take_due()` / `kapsul_due_count()`. Edge Function `kapsul-notify` (verify_jwt kapalı; idempotent, her kapsül bir kez işlenir),
+`pg_net` + `pg_cron` işi `kapsul-notify` her 5 dakikada. Kartta "🔔 Açılınca haber ver".
+Anahtar yokken fonksiyon kapsülleri işaretlemez; anahtar eklenince bekleyenler gönderilir.
+Gönderen adresi varsayılan `onboarding@resend.dev` (yalnız Resend hesabının kendi e-postasına gider); kendi alan adın için `RESEND_FROM` secret'ı ekle.
+Migration: `supabase/migrations/20261105000004_kapsul_notify.sql`
+
 **Hedef:** Kapsül açıldığında sahibine (ve isteyen takipçilere) e-posta.
 - `kapsul_capsules.notified_at`, `kapsul_watchers(capsule_id, email)` tablosu + `kapsul_watch(id, email)` RPC
 - Edge Function `kapsul-notify`: açılmış ve `notified_at is null` kapsülleri bulur, Resend ile gönderir

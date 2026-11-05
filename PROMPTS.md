@@ -22,6 +22,8 @@ Bu uygulamayı yeniden üretmek ya da geliştirmek için kullanabileceğin promp
 ## v1.2'de koda dönüşenler ✅
 - **Hesaplar:** "Supabase Auth ile e-posta girişi ekle; 'Benimkiler' cihazdan bağımsız hesaba bağlansın." → magic link girişi, `kapsul_mine` / `kapsul_claim` RPC'leri; girişte bu cihazdaki kapsüller hesaba taşınır.
 
+## v1.3'te koda dönüşenler ✅
+- **Bildirim:** "Kapsül açıldığında e-posta bildirimi gönderen bir Supabase Edge Function + cron ekle." → `kapsul-notify` fonksiyonu, 5 dakikalık `pg_cron` işi, kartta "Açılınca haber ver". Göndermek için Supabase'e `RESEND_API_KEY` secret'ı eklenmeli.
+
 ## Sıradaki promptlar
-- "Kapsül açıldığında e-posta bildirimi gönderen bir Supabase Edge Function + cron ekle." (Resend gibi bir e-posta servisi API anahtarı gerekir)
 - "Kapsül sayfaları için dinamik OG görseli üret."
