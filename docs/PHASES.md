@@ -7,7 +7,7 @@
 | 3 | Supabase Auth (e-posta magic link), kapsülün hesaba bağlanması | ✅ Tamam (v1.2) — deploy bekliyor |
 | 4 | Açılınca e-posta bildirimi (Edge Function + pg_cron + Resend) | ✅ Tamam (v1.3) — `RESEND_API_KEY` bekliyor |
 | 5 | Cilalama: dinamik OG görseli, PWA, erişilebilirlik, boş/yükleme durumları | ✅ Tamam (v1.4) — deploy bekliyor |
-| 6 | Kalite: Vitest + Playwright testleri, GitHub Actions CI, Vercel Git bağlantısı | ⏳ `/faz-6-kalite` |
+| 6 | Kalite: Vitest + Playwright testleri, GitHub Actions CI, Vercel Git bağlantısı | ✅ Testler + CI hazır — GitHub/Vercel bağlantısı bekliyor |
 
 ---
 
@@ -63,7 +63,12 @@ Yerel deneme: `npm run build && node scripts/try-api.mjs <klasör>` (OG PNG'leri
 - Klavye erişimi, `aria-live` geri sayım, renk kontrastı kontrolü
 - İskelet yükleme kartları, hata durumunda yeniden dene
 
-## Faz 6 — Kalite ve otomasyon
+## Faz 6 — Kalite ve otomasyon ✅
+Yapılanlar: `src/lib/time.js` (`countdown`, `toLocalInput`, `fmt`) + 8 Vitest testi; `e2e/app.spec.js` 7 senaryo × masaüstü/mobil
+= 14 Playwright testi (Supabase `page.route` ile mock'lu, service worker kapalı); `npm test`, `npm run test:e2e`;
+`.github/workflows/ci.yml` (npm ci → build → vitest → playwright, hata olursa rapor artifact'ı).
+`.env` artık git dışında; `src/supabase.js` ve `api/_kapsul.js` env yoksa herkese açık URL + publishable anahtarı kullanır,
+böylece CI ve Git tabanlı deploy gizli değişken istemez.
 - Vitest: `countdown`, `toLocalInput` birim testleri
 - Playwright: Supabase mock'lu duvar / tek kapsül / form akışları
 - GitHub reposu + Actions (build + test), Vercel Git bağlantısı (push = deploy)

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase.js'
+import { toLocalInput, countdown, fmt } from './lib/time.js'
 
 const MOODS = ['✨', '💌', '🌱', '🔥', '🌙', '🎯', '🫶', '🚀']
 const PRESETS = [
@@ -9,21 +10,6 @@ const PRESETS = [
   { label: '1 ay', ms: 30 * 86400e3 },
   { label: '1 yıl', ms: 365 * 86400e3 },
 ]
-
-function toLocalInput(d) {
-  const p = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
-}
-
-function countdown(ms) {
-  if (ms <= 0) return 'açılıyor…'
-  const s = Math.floor(ms / 1000)
-  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600)
-  const m = Math.floor((s % 3600) / 60), sec = s % 60
-  if (d > 0) return `${d}g ${h}s ${m}dk`
-  if (h > 0) return `${h}s ${m}dk ${sec}sn`
-  return `${m}dk ${sec}sn`
-}
 
 const MINE_KEY = 'kapsul_mine'
 function readMine() {
@@ -40,9 +26,6 @@ async function share(id) {
     await navigator.clipboard.writeText(url); return 'Link kopyalandı'
   } catch { return url }
 }
-
-const fmt = (iso) =>
-  new Date(iso).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' })
 
 function useSession() {
   const [session, setSession] = useState(null)

@@ -22,6 +22,8 @@ Belirsiz durumda makul olanı seç ve sonunda kısaca ne varsaydığını yaz. K
 npm install
 npm run dev       # http://localhost:5173
 npm run build     # dist/
+npm test          # Vitest birim testleri
+npm run test:e2e  # Playwright (ilk sefer: npx playwright install chromium)
 npx vercel --prod # deploy (Vite framework)
 ```
 
