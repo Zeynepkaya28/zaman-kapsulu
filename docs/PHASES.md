@@ -6,7 +6,7 @@
 | 2 | Paylaşım linki `/k/:id`, IP başına spam sınırı, "Benimkiler" (cihaz bazlı) | ✅ Tamam (v1.1) |
 | 3 | Supabase Auth (e-posta magic link), kapsülün hesaba bağlanması | ✅ Tamam (v1.2) — deploy bekliyor |
 | 4 | Açılınca e-posta bildirimi (Edge Function + pg_cron + Resend) | ✅ Tamam (v1.3) — `RESEND_API_KEY` bekliyor |
-| 5 | Cilalama: dinamik OG görseli, PWA, erişilebilirlik, boş/yükleme durumları | ⏳ `/faz-5-cilalama` |
+| 5 | Cilalama: dinamik OG görseli, PWA, erişilebilirlik, boş/yükleme durumları | ✅ Tamam (v1.4) — deploy bekliyor |
 | 6 | Kalite: Vitest + Playwright testleri, GitHub Actions CI, Vercel Git bağlantısı | ⏳ `/faz-6-kalite` |
 
 ---
@@ -51,7 +51,13 @@ Migration: `supabase/migrations/20261105000004_kapsul_notify.sql`
 - `pg_cron` her 5 dakikada fonksiyonu çağırır
 - **Gerekli secret:** `RESEND_API_KEY` (Supabase Edge Function secret)
 
-## Faz 5 — Cilalama
+## Faz 5 — Cilalama ✅
+Yapılanlar: `api/og.js` (Edge, `@vercel/og`, mühürlü = koyu kart + açılış tarihi, açık = mesajın ilk 140 karakteri),
+`api/k.js` (`/k/:id` → index.html + og/twitter meta; `vercel.json` rewrite), `public/manifest.webmanifest`,
+192/512/maskable ikonlar, `public/sw.js` (kabuk önbelleği; Supabase ve /api önbelleğe alınmaz),
+`:focus-visible` halkası, `aria-pressed` sekmeler, dakikalık `aria-live` özet, `--muted` kontrastı 5.4:1,
+koyu modda turuncu düğme metni koyu (7.5:1), iskelet kartlar, "Tekrar dene". 360px'te yatay kaydırma yok.
+Yerel deneme: `npm run build && node scripts/try-api.mjs <klasör>` (OG PNG'leri ve meta HTML'i üretir).
 - Vercel Function `/api/og?id=` ile dinamik OG görseli (mühürlü/açık), `/k/:id` için meta etiketleri
 - PWA manifest + ikon, çevrimdışı kabuk
 - Klavye erişimi, `aria-live` geri sayım, renk kontrastı kontrolü

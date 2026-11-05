@@ -25,5 +25,10 @@ Bu uygulamayı yeniden üretmek ya da geliştirmek için kullanabileceğin promp
 ## v1.3'te koda dönüşenler ✅
 - **Bildirim:** "Kapsül açıldığında e-posta bildirimi gönderen bir Supabase Edge Function + cron ekle." → `kapsul-notify` fonksiyonu, 5 dakikalık `pg_cron` işi, kartta "Açılınca haber ver". Göndermek için Supabase'e `RESEND_API_KEY` secret'ı eklenmeli.
 
+## v1.4'te koda dönüşenler ✅
+- **Paylaşım görseli:** "Kapsül sayfaları için dinamik OG görseli üret." → `/api/og?id=`, `/k/:id` sunucuda meta etiketleriyle döner.
+- **Uygulama gibi kurulum:** manifest + ikonlar + service worker (çevrimdışı kabuk).
+- **Erişilebilirlik:** görünür odak, ekran okuyucu özeti, kontrast düzeltmeleri, iskelet yükleme ve "Tekrar dene".
+
 ## Sıradaki promptlar
 - "Kapsül sayfaları için dinamik OG görseli üret."

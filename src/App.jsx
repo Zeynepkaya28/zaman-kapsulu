@@ -141,6 +141,35 @@ function Capsule({ c, now, onShare, mine }) {
   )
 }
 
+function Skeleton({ count = 3 }) {
+  return (
+    <div className="grid" aria-hidden="true">
+      {Array.from({ length: count }, (_, i) => (
+        <div className="cap skel" key={i}><i /><i /><i className="short" /></div>
+      ))}
+    </div>
+  )
+}
+
+function LoadError({ onRetry }) {
+  return (
+    <div className="loaderr" role="alert">
+      <p>Kapsüller yüklenemedi. Bağlantını kontrol edip tekrar dene.</p>
+      <button className="ghost" onClick={onRetry}>Tekrar dene</button>
+    </div>
+  )
+}
+
+// ekran okuyucular için dakikada bir değişen kısa özet (saniyelik geri sayım duyurulmaz)
+function nextUnlockSummary(list, now) {
+  const sealed = list.filter((c) => !c.is_open)
+  if (!sealed.length) return 'Mühürlü kapsül yok.'
+  const next = Math.min(...sealed.map((c) => new Date(c.unlock_at).getTime()))
+  const mins = Math.max(0, Math.floor((next - now) / 60000))
+  const when = mins >= 1440 ? `${Math.floor(mins / 1440)} gün` : mins >= 60 ? `${Math.floor(mins / 60)} saat` : `${mins} dakika`
+  return `${sealed.length} mühürlü kapsül var. En yakını ${when} sonra açılacak.`
+}
+
 function SinglePage({ id }) {
   const [c, setC] = useState(null)
   const [state, setState] = useState('loading')
@@ -148,7 +177,8 @@ function SinglePage({ id }) {
   const [toast, setToast] = useState('')
   async function load() {
     const { data, error } = await supabase.rpc('kapsul_get', { p_id: id })
-    if (error || !data?.length) { setState('missing'); return }
+    if (error) { setState('error'); return }
+    if (!data?.length) { setState('missing'); return }
     setC(data[0]); setState('ok')
   }
   useEffect(() => { load() }, [id])
@@ -156,18 +186,20 @@ function SinglePage({ id }) {
   useEffect(() => { if (c && !c.is_open && new Date(c.unlock_at).getTime() <= now) load() }, [now, c])
   const onShare = async (cid) => { setToast(await share(cid)); setTimeout(() => setToast(''), 3000) }
   return (
-    <div className="wrap single">
+    <main className="wrap single">
       <a className="back" href="/">← Tüm kapsüller</a>
-      {state === 'loading' && <p className="muted">Yükleniyor…</p>}
+      {state === 'loading' && <div className="singlecard"><Skeleton count={1} /></div>}
+      {state === 'error' && <LoadError onRetry={() => { setState('loading'); load() }} />}
       {state === 'missing' && <p className="muted">Bu kapsül bulunamadı.</p>}
+      {state === 'ok' && <p className="sr-only" aria-live="polite">{nextUnlockSummary([c], now)}</p>}
       {state === 'ok' && <>
         <h1 className="singletitle">{c.is_open ? 'Kapsül açıldı.' : 'Bu kapsül hâlâ mühürlü.'}</h1>
         <p className="lead">{c.is_open ? `${c.nickname} bunu ${fmt(c.created_at)} tarihinde yazmıştı.` : `${fmt(c.unlock_at)} tarihinde açılacak. Linki sakla, o gün geri dön.`}</p>
         <div className="singlecard"><Capsule c={c} now={now} onShare={onShare} mine={readMine().includes(c.id)} /></div>
       </>}
       <a className="primary cta" href="/">Sen de bir kapsül bırak</a>
-      {toast && <div className="toast">{toast}</div>}
-    </div>
+      {toast && <div className="toast" role="status">{toast}</div>}
+    </main>
   )
 }
 
@@ -180,6 +212,7 @@ function Wall() {
   const [capsules, setCapsules] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [listError, setListError] = useState(false)
   const [now, setNow] = useState(Date.now())
   const [filter, setFilter] = useState('all')
 
@@ -196,8 +229,8 @@ function Wall() {
 
   async function load() {
     const { data, error } = await supabase.rpc('kapsul_list')
-    if (error) setError(error.message)
-    else { setCapsules(data || []); setError('') }
+    if (error) setListError(true)
+    else { setCapsules(data || []); setListError(false) }
     setLoading(false)
     if (userId) loadMine()
   }
@@ -256,7 +289,7 @@ function Wall() {
   const onShare = async (id) => { setToast(await share(id)); setTimeout(() => setToast(''), 3000) }
 
   return (
-    <div className="wrap">
+    <main className="wrap">
       <header className="hero">
         <div className="topbar">
           <div className="badge">⏳ Zaman Kapsülü</div>
@@ -293,7 +326,7 @@ function Wall() {
           <div className="moods">
             {MOODS.map((m) => (
               <button type="button" key={m} className={m === mood ? 'mood on' : 'mood'}
-                onClick={() => setMood(m)} aria-label={`ruh hali ${m}`}>{m}</button>
+                onClick={() => setMood(m)} aria-label={`ruh hali ${m}`} aria-pressed={m === mood}>{m}</button>
             ))}
           </div>
         </div>
@@ -321,11 +354,13 @@ function Wall() {
           <h2>Duvar</h2>
           <div className="tabs">
             {[['all', 'Hepsi'], ['sealed', 'Mühürlü'], ['open', 'Açık'], ['mine', 'Benimkiler']].map(([k, l]) => (
-              <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}</button>
+              <button key={k} className={filter === k ? 'on' : ''} aria-pressed={filter === k} onClick={() => setFilter(k)}>{l}</button>
             ))}
           </div>
         </div>
-        {loading ? <p className="muted">Yükleniyor…</p> :
+        {!loading && !listError && <p className="sr-only" aria-live="polite">{nextUnlockSummary(capsules, now)}</p>}
+        {loading ? <Skeleton /> :
+          listError ? <LoadError onRetry={() => { setLoading(true); load() }} /> :
           shown.length === 0 ? <p className="muted">{filter === 'mine' ? (userId ? 'Hesabında henüz kapsül yok.' : 'Bu cihazdan bıraktığın kapsül yok. Giriş yaparsan kapsüllerin her cihazda görünür.') :'Henüz kapsül yok. İlkini sen bırak.'}</p> :
           <div className="grid">
             {shown.map((c) => <Capsule key={c.id} c={c} now={now} onShare={onShare} mine={mine.includes(c.id)} />)}
@@ -333,7 +368,7 @@ function Wall() {
       </section>
 
       <footer>Supabase + Vercel ile çalışır · Mesajlar açılış anına kadar sunucuda kilitli tutulur.</footer>
-      {toast && <div className="toast">{toast}</div>}
-    </div>
+      {toast && <div className="toast" role="status">{toast}</div>}
+    </main>
   )
 }

@@ -1,1 +1,1 @@
-{ "rewrites": [{ "source": "/k/:id", "destination": "/index.html" }] }
+{ "rewrites": [{ "source": "/k/:id", "destination": "/api/k?id=:id" }] }
