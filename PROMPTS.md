@@ -19,7 +19,9 @@ Bu uygulamayı yeniden üretmek ya da geliştirmek için kullanabileceğin promp
 - **Spam sınırı:** `kapsul_create` IP'yi (hash'li) kontrol eder; dakikada en fazla 3 kapsül.
 - **Benimkiler sekmesi:** Bu cihazdan bırakılan kapsüller işaretlenir ve ayrı sekmede listelenir (giriş gerektirmez).
 
+## v1.2'de koda dönüşenler ✅
+- **Hesaplar:** "Supabase Auth ile e-posta girişi ekle; 'Benimkiler' cihazdan bağımsız hesaba bağlansın." → magic link girişi, `kapsul_mine` / `kapsul_claim` RPC'leri; girişte bu cihazdaki kapsüller hesaba taşınır.
+
 ## Sıradaki promptlar
 - "Kapsül açıldığında e-posta bildirimi gönderen bir Supabase Edge Function + cron ekle." (Resend gibi bir e-posta servisi API anahtarı gerekir)
-- "Supabase Auth ile e-posta girişi ekle; 'Benimkiler' cihazdan bağımsız hesaba bağlansın." (Supabase panelinde Site URL'ye Vercel adresini eklemek gerekir)
 - "Kapsül sayfaları için dinamik OG görseli üret."

@@ -44,6 +44,56 @@ async function share(id) {
 const fmt = (iso) =>
   new Date(iso).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' })
 
+function useSession() {
+  const [session, setSession] = useState(null)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    return () => data.subscription.unsubscribe()
+  }, [])
+  return session
+}
+
+function AuthBar({ session }) {
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState('')
+  const [state, setState] = useState('idle')
+  const [err, setErr] = useState('')
+  if (session) {
+    return (
+      <div className="authbar">
+        <span className="who" title={session.user.email}>{session.user.email}</span>
+        <button className="ghost" onClick={() => supabase.auth.signOut()}>Çıkış</button>
+      </div>
+    )
+  }
+  async function send(e) {
+    e.preventDefault()
+    setState('sending'); setErr('')
+    const { error } = await supabase.auth.signInWithOtp({
+      email, options: { emailRedirectTo: location.origin + location.pathname },
+    })
+    if (error) { setErr(error.message); setState('idle') } else setState('sent')
+  }
+  return (
+    <div className="authbar">
+      {!open && <button className="ghost" onClick={() => setOpen(true)}>Giriş yap</button>}
+      {open && state !== 'sent' && (
+        <form className="authform" onSubmit={send}>
+          <input type="email" required autoFocus value={email} placeholder="e-posta adresin"
+            aria-label="E-posta adresi" onChange={(e) => setEmail(e.target.value)} />
+          <button className="ghost" disabled={state === 'sending'}>
+            {state === 'sending' ? 'Gönderiliyor…' : 'Link gönder'}
+          </button>
+          <button type="button" className="ghost" aria-label="Vazgeç" onClick={() => setOpen(false)}>✕</button>
+        </form>
+      )}
+      {state === 'sent' && <span className="who">Giriş linki {email} adresine gönderildi.</span>}
+      {err && <span className="err small">{err}</span>}
+    </div>
+  )
+}
+
 function Capsule({ c, now, onShare, mine }) {
   const left = new Date(c.unlock_at).getTime() - now
   const total = new Date(c.unlock_at) - new Date(c.created_at)
@@ -115,25 +165,42 @@ function Wall() {
   const [unlockAt, setUnlockAt] = useState(toLocalInput(new Date(Date.now() + 86400e3)))
   const [sending, setSending] = useState(false)
   const [toast, setToast] = useState('')
-  const [mine, setMine] = useState(readMine)
+  const [localMine, setLocalMine] = useState(readMine)
+  const [myCaps, setMyCaps] = useState([])
+  const session = useSession()
+  const userId = session?.user?.id
 
   async function load() {
     const { data, error } = await supabase.rpc('kapsul_list')
     if (error) setError(error.message)
     else { setCapsules(data || []); setError('') }
     setLoading(false)
+    if (userId) loadMine()
+  }
+  async function loadMine() {
+    const { data } = await supabase.rpc('kapsul_mine')
+    setMyCaps(data || [])
   }
 
   useEffect(() => { load() }, [])
+  // giriş yapılınca bu cihazdaki kapsülleri hesaba bağla, sonra hesabın kapsüllerini çek
+  useEffect(() => {
+    if (!userId) { setMyCaps([]); return }
+    (async () => {
+      const ids = readMine()
+      if (ids.length) await supabase.rpc('kapsul_claim', { p_ids: ids })
+      loadMine()
+    })()
+  }, [userId])
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
   }, [])
   // a capsule just crossed its unlock time → refetch to get its message
   useEffect(() => {
-    const due = capsules.some((c) => !c.is_open && new Date(c.unlock_at).getTime() <= now)
+    const due = [...capsules, ...myCaps].some((c) => !c.is_open && new Date(c.unlock_at).getTime() <= now)
     if (due) load()
-  }, [now, capsules])
+  }, [now, capsules, myCaps])
 
   async function submit(e) {
     e.preventDefault()
@@ -145,7 +212,7 @@ function Wall() {
     setSending(false)
     if (error) { setError(error.message); return }
     setMessage('')
-    addMine(newId); setMine(readMine())
+    addMine(newId); setLocalMine(readMine())
     const msg = await share(newId)
     setToast(`Kapsül mühürlendi. ${msg === 'Link kopyalandı' ? 'Linki kopyalandı, sakla.' : ''}`)
     setTimeout(() => setToast(''), 4000)
@@ -157,16 +224,20 @@ function Wall() {
     return { total: capsules.length, open, sealed: capsules.length - open }
   }, [capsules])
 
-  const shown = capsules.filter((c) =>
-    filter === 'all' ? true : filter === 'open' ? c.is_open
-      : filter === 'mine' ? mine.includes(c.id) : !c.is_open
-  )
+  // oturum varsa "Benimkiler" hesaptan gelir (her cihazda aynı), yoksa bu cihazın listesinden
+  const mine = userId ? myCaps.map((c) => c.id) : localMine
+  const shown = filter === 'mine'
+    ? (userId ? myCaps : capsules.filter((c) => localMine.includes(c.id)))
+    : capsules.filter((c) => filter === 'all' ? true : filter === 'open' ? c.is_open : !c.is_open)
   const onShare = async (id) => { setToast(await share(id)); setTimeout(() => setToast(''), 3000) }
 
   return (
     <div className="wrap">
       <header className="hero">
-        <div className="badge">⏳ Zaman Kapsülü</div>
+        <div className="topbar">
+          <div className="badge">⏳ Zaman Kapsülü</div>
+          <AuthBar session={session} />
+        </div>
         <h1>Bugünden geleceğe<br /><em>mühürlü</em> bir not bırak.</h1>
         <p className="lead">
           Yazdığın not, seçtiğin ana kadar kilitli kalır. O an geldiğinde herkes için açılır.
@@ -231,7 +302,7 @@ function Wall() {
           </div>
         </div>
         {loading ? <p className="muted">Yükleniyor…</p> :
-          shown.length === 0 ? <p className="muted">{filter === 'mine' ? 'Bu cihazdan bıraktığın kapsül yok.' : 'Henüz kapsül yok. İlkini sen bırak.'}</p> :
+          shown.length === 0 ? <p className="muted">{filter === 'mine' ? (userId ? 'Hesabında henüz kapsül yok.' : 'Bu cihazdan bıraktığın kapsül yok. Giriş yaparsan kapsüllerin her cihazda görünür.') :'Henüz kapsül yok. İlkini sen bırak.'}</p> :
           <div className="grid">
             {shown.map((c) => <Capsule key={c.id} c={c} now={now} onShare={onShare} mine={mine.includes(c.id)} />)}
           </div>}

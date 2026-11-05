@@ -59,3 +59,11 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: cen
 .singletitle { font-size: clamp(30px, 6vw, 44px); margin-top: 28px; }
 .singlecard { margin: 24px 0; }
 .cta { display: block; text-align: center; text-decoration: none; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.authbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; min-width: 0; }
+.authform { display: flex; gap: 6px; flex-wrap: wrap; }
+.authform input { width: 220px; max-width: 100%; padding: 6px 10px; font-size: 13px; }
+.ghost { border: 1px solid var(--line); background: transparent; border-radius: 99px; padding: 5px 12px; font-size: 13px; }
+.ghost:disabled { opacity: .6; }
+.who { color: var(--muted); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.err.small { font-size: 13px; }

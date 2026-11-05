@@ -4,7 +4,7 @@
 |---|---|---|
 | 1 | MVP: kapsül oluştur, duvar, geri sayım, otomatik açılma | ✅ Tamam (v1.0) |
 | 2 | Paylaşım linki `/k/:id`, IP başına spam sınırı, "Benimkiler" (cihaz bazlı) | ✅ Tamam (v1.1) |
-| 3 | Supabase Auth (e-posta magic link), kapsülün hesaba bağlanması | ⏳ Sırada — `/faz-3-auth` |
+| 3 | Supabase Auth (e-posta magic link), kapsülün hesaba bağlanması | ✅ Tamam (v1.2) — deploy bekliyor |
 | 4 | Açılınca e-posta bildirimi (Edge Function + pg_cron + Resend) | ⏳ `/faz-4-bildirim` |
 | 5 | Cilalama: dinamik OG görseli, PWA, erişilebilirlik, boş/yükleme durumları | ⏳ `/faz-5-cilalama` |
 | 6 | Kalite: Vitest + Playwright testleri, GitHub Actions CI, Vercel Git bağlantısı | ⏳ `/faz-6-kalite` |
@@ -23,7 +23,12 @@
 - "Benimkiler" sekmesi (localStorage — Faz 3'te hesaba taşınacak)
 - Migration: `supabase/migrations/20261105000002_kapsul_share_ratelimit.sql`
 
-## Faz 3 — Hesaplar
+## Faz 3 — Hesaplar ✅
+Yapılanlar: `owner_id` kolonu, `kapsul_create` sahibi yazıyor, `kapsul_mine()` ve `kapsul_claim(uuid[])` (yalnız `authenticated`).
+Başlıkta "Giriş yap" → magic link; girişte cihazdaki kapsüller hesaba bağlanıyor, "Benimkiler" hesaptan geliyor.
+SQL testi: claim yalnız sahipsizleri aldı, açılmamış mesaj NULL, anon `kapsul_mine` çağıramıyor.
+Migration: `supabase/migrations/20261105000003_kapsul_auth.sql`
+
 **Hedef:** Giriş isteğe bağlı kalsın; giriş yapan kullanıcının kapsülleri hesabına bağlansın, cihazlar arası "Benimkiler".
 - `owner_id uuid references auth.users` kolonu; `kapsul_create` `auth.uid()`'yi yazsın
 - `kapsul_mine()` RPC (sadece `auth.uid()` sahibi olanlar; mesaj yine açılana kadar gizli)
