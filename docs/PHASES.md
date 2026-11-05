@@ -7,7 +7,7 @@
 | 3 | Supabase Auth (e-posta magic link), kapsülün hesaba bağlanması | ✅ Tamam (v1.2) — deploy bekliyor |
 | 4 | Açılınca e-posta bildirimi (Edge Function + pg_cron + Resend) | ✅ Tamam (v1.3) — `RESEND_API_KEY` bekliyor |
 | 5 | Cilalama: dinamik OG görseli, PWA, erişilebilirlik, boş/yükleme durumları | ✅ Tamam (v1.4) — deploy bekliyor |
-| 6 | Kalite: Vitest + Playwright testleri, GitHub Actions CI, Vercel Git bağlantısı | ✅ Testler + CI hazır — GitHub/Vercel bağlantısı bekliyor |
+| 6 | Kalite: Vitest + Playwright testleri, GitHub Actions CI, Vercel Git bağlantısı | ✅ Tamam (v1.5) — repo `Zeynepkaya28/zaman-kapsulu` (özel), CI yeşil, Vercel Git'e bağlı |
 
 ---
 
@@ -69,6 +69,7 @@ Yapılanlar: `src/lib/time.js` (`countdown`, `toLocalInput`, `fmt`) + 8 Vitest t
 `.github/workflows/ci.yml` (npm ci → build → vitest → playwright, hata olursa rapor artifact'ı).
 `.env` artık git dışında; `src/supabase.js` ve `api/_kapsul.js` env yoksa herkese açık URL + publishable anahtarı kullanır,
 böylece CI ve Git tabanlı deploy gizli değişken istemez.
+GitHub: https://github.com/Zeynepkaya28/zaman-kapsulu (özel). Vercel projesi bu repoya bağlı: `main`'e push = production deploy.
 - Vitest: `countdown`, `toLocalInput` birim testleri
 - Playwright: Supabase mock'lu duvar / tek kapsül / form akışları
 - GitHub reposu + Actions (build + test), Vercel Git bağlantısı (push = deploy)
